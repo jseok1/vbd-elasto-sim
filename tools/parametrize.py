@@ -20,7 +20,7 @@ def parametrize(path: str, density: float, young: float, poisson: float) -> None
   vertex_to_tetrahedra = [[] for _ in range(V)]
 
   for e, element in enumerate(mesh.elements):
-    v1, v2, v3, v4 = element - 1
+    v1, v2, v3, v4 = element
 
     vertices = mesh.vertices[[v1, v2, v3, v4]]
     Dm = np.stack(
@@ -164,6 +164,49 @@ def parametrize(path: str, density: float, young: float, poisson: float) -> None
 
   with open("/workspace/assets/experiments/01/triangle-indices.json", "w") as file:
     json.dump(oriented_faces, file)
+
+  # vertex pre-coloring
+  ordering = sorted([v for v in range(V)], key=lambda v: len(vertex_to_tetrahedra[v]))
+  colors = [None] * V
+  for v in ordering:
+    used_colors = set()
+    for e in vertex_to_tetrahedra[v]:
+      element = mesh.elements[e]
+      for u in element:
+        # u is a neighbor of v
+        if u != v and colors[u] is not None:
+          used_colors.add(colors[u])
+
+    color = 0
+    while color in used_colors:
+      color += 1
+
+    colors[v] = color
+
+  # test
+  for element in mesh.elements:
+    v1, v2, v3, v4 = element
+    assert colors[v1] != colors[v2]
+    assert colors[v1] != colors[v3]
+    assert colors[v1] != colors[v4]
+    assert colors[v2] != colors[v3]
+    assert colors[v2] != colors[v4]
+    assert colors[v3] != colors[v4]
+
+  C = max(colors) + 1
+  color_groups = [[] for _ in range(C)]
+  for v, color in enumerate(colors):
+    color_groups[color].append(v)
+
+  color_group_offsets = [0] * (C + 1)
+  for g in range(1, C + 1):
+    color_group_offsets[g] = color_group_offsets[g - 1] + len(color_groups[g - 1])
+
+  with open("/workspace/assets/experiments/01/color-groups.json", "w") as file:
+    json.dump(list(itertools.chain.from_iterable(color_groups)), file)
+
+  with open("/workspace/assets/experiments/01/color-group-offsets.json", "w") as file:
+    json.dump(color_group_offsets, file)
 
 
 if __name__ == "__main__":

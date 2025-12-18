@@ -215,10 +215,18 @@ int main() {
   glBindVertexArray(0);
 
   // === COMPUTE PIPELINE SHADERS ===
+  ComputeShader vbdPositionUpdate, vbdVelocityUpdate;
+  try {
+    vbdPositionUpdate.build("./assets/shaders/vbd-1-position.comp.glsl");
+    vbdVelocityUpdate.build("./assets/shaders/vbd-2-velocity.comp.glsl");
+
+  } catch (const std::exception& err) {
+    std::cerr << err.what();
+    return 1;
+  }
 
   // === RENDER PIPELINE SHADERS ===
   RenderShader interiorShader, exteriorShader;
-
   try {
     interiorShader.build(
       "./assets/shaders/interior.vert.glsl", "./assets/shaders/interior.frag.glsl"
@@ -262,6 +270,28 @@ int main() {
         accumulatedTime -= deltaTime;
       }
     }
+
+    // === VBD (not synced with real-time) ===
+    // y
+    // DCD with x^t
+    // adaptive init for x
+    int iters = 4;
+    for (int iter = 0; iter < iters; iter++) {
+      // CCD every n_col iters
+      for (unsigned int colorGroup = 0; colorGroup < vbd.colorGroupCount; colorGroup++) {
+        // 1. position update
+        unsigned int colorGroupSize = vbd.colorGroupSizes[colorGroup];
+
+        vbdPositionUpdate.use();
+        vbdPositionUpdate.uniform("color_group", colorGroup);
+        vbdPositionUpdate.uniform("color_group_size", colorGroupSize);
+        glDispatchCompute((colorGroupSize + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
+        glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+        // 2. ping-pong
+      }
+    }
+    // velocity update
 
     glClearColor(0.6f, 0.88f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -14,6 +14,7 @@ class VBD {
   unsigned int vertCount;
   unsigned int triCount;
   unsigned int tetCount;
+  unsigned int colorGroupCount;
 
   unsigned int __SSBO_REST_POSITIONS, __SSBO_PREV_POSITIONS, __SSBO_CURR_POSITIONS;
   unsigned int __SSBO_VELOCITIES;
@@ -22,8 +23,14 @@ class VBD {
   unsigned int __SSBO_TET_INDICES;
   unsigned int __SSBO_STIFFNESSES;
   unsigned int __VAO_SURFACE;
+  unsigned int __SSBO_VERTEX_INDEX_TO_TETRAHEDRA;
+  unsigned int __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS;
+  unsigned int __SSBO_COLOR_GROUPS;
+  unsigned int __SSBO_COLOR_GROUP_OFFSETS;
 
   Transform transform;
+
+  std::vector<unsigned int> colorGroupSizes;
 
   VBD()
     : vertCount{},
@@ -38,12 +45,21 @@ class VBD {
       __SSBO_TET_INDICES{},
       __SSBO_STIFFNESSES{},
       __VAO_SURFACE{},
-      transform{} {
+      __SSBO_VERTEX_INDEX_TO_TETRAHEDRA{},
+      __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS{},
+      __SSBO_COLOR_GROUPS{},
+      __SSBO_COLOR_GROUP_OFFSETS{},
+      transform{},
+      colorGroupSizes{} {
     init_positions();
     init_masses();
     init_triangle_indices();
     init_tetrahedron_indices();
     init_stiffnesses();
+    init_vertex_to_tetrahedra();
+    init_vertex_to_tetrahedra_offsets();
+    init_color_groups();
+    init_color_group_offsets();
 
     // === DRAWING ===
     glGenVertexArrays(1, &__VAO_SURFACE);
@@ -145,7 +161,7 @@ class VBD {
       tetrahedra.data(),
       GL_STATIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, __SSBO_TET_INDICES);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, __SSBO_TET_INDICES);
   }
 
   void init_stiffnesses() {
@@ -159,6 +175,76 @@ class VBD {
     glBufferData(
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 144 * tetCount, stiffnesses.data(), GL_STATIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, __SSBO_STIFFNESSES);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, __SSBO_STIFFNESSES);
+  }
+
+  void init_vertex_to_tetrahedra() {
+    std::ifstream f("./assets/experiments/01/vertex-to-tetrahedra.json");
+    json j = json::parse(f);
+
+    std::vector<float> mapping = j.get<std::vector<float>>();
+
+    glGenBuffers(1, &__SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
+    glBufferData(
+      GL_SHADER_STORAGE_BUFFER, sizeof(float) * mapping.size(), mapping.data(), GL_STATIC_DRAW
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
+  }
+
+  void init_vertex_to_tetrahedra_offsets() {
+    std::ifstream f("./assets/experiments/01/vertex-to-tetrahedra-offsets.json");
+    json j = json::parse(f);
+
+    std::vector<float> mapping = j.get<std::vector<float>>();
+
+    glGenBuffers(1, &__SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
+    glBufferData(
+      GL_SHADER_STORAGE_BUFFER, sizeof(float) * mapping.size(), mapping.data(), GL_STATIC_DRAW
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
+  }
+
+  void init_color_groups() {
+    std::ifstream f("./assets/experiments/01/color-groups.json");
+    json j = json::parse(f);
+
+    std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
+
+    glGenBuffers(1, &__SSBO_COLOR_GROUPS);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_COLOR_GROUPS);
+    glBufferData(
+      GL_SHADER_STORAGE_BUFFER,
+      sizeof(unsigned int) * mapping.size(),
+      mapping.data(),
+      GL_STATIC_DRAW
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, __SSBO_COLOR_GROUPS);
+  }
+
+  void init_color_group_offsets() {
+    std::ifstream f("./assets/experiments/01/color-group-offsets.json");
+    json j = json::parse(f);
+
+    std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
+    colorGroupCount = mapping.size() - 1;
+
+    glGenBuffers(1, &__SSBO_COLOR_GROUP_OFFSETS);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_COLOR_GROUP_OFFSETS);
+    glBufferData(
+      GL_SHADER_STORAGE_BUFFER,
+      sizeof(unsigned int) * mapping.size(),
+      mapping.data(),
+      GL_STATIC_DRAW
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, __SSBO_COLOR_GROUP_OFFSETS);
+
+    // [[*,*], [*,*,*], [*,*,*,*]]
+    // [0, 2, 5, 9]
+
+    for (int colorGroup = 0; colorGroup < colorGroupCount; colorGroup++) {
+      colorGroupSizes.push_back(mapping[colorGroup + 1] - mapping[colorGroup]);
+    }
   }
 };
