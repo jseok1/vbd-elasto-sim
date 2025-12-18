@@ -16,7 +16,8 @@ class VBD {
   unsigned int tetCount;
   unsigned int colorGroupCount;
 
-  unsigned int __SSBO_REST_POSITIONS, __SSBO_PREV_POSITIONS, __SSBO_CURR_POSITIONS;
+  unsigned int __SSBO_REST_POSITIONS, __SSBO_PREV_POSITIONS, __SSBO_CURR_POSITIONS_FRONT,
+    __SSBO_CURR_POSITIONS_BACK;
   unsigned int __SSBO_VELOCITIES;
   unsigned int __SSBO_MASSES;
   unsigned int __EBO_TRI_INDICES;
@@ -38,7 +39,8 @@ class VBD {
       tetCount{},
       __SSBO_REST_POSITIONS{},
       __SSBO_PREV_POSITIONS{},
-      __SSBO_CURR_POSITIONS{},
+      __SSBO_CURR_POSITIONS_FRONT{},
+      __SSBO_CURR_POSITIONS_BACK{},
       __SSBO_VELOCITIES{},
       __SSBO_MASSES{},
       __EBO_TRI_INDICES{},
@@ -64,7 +66,7 @@ class VBD {
     // === DRAWING ===
     glGenVertexArrays(1, &__VAO_SURFACE);
     glBindVertexArray(__VAO_SURFACE);
-    glBindBuffer(GL_ARRAY_BUFFER, __SSBO_CURR_POSITIONS);
+    glBindBuffer(GL_ARRAY_BUFFER, __SSBO_CURR_POSITIONS_FRONT);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, __EBO_TRI_INDICES);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -100,12 +102,19 @@ class VBD {
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, __SSBO_PREV_POSITIONS);
 
-    glGenBuffers(1, &__SSBO_CURR_POSITIONS);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_CURR_POSITIONS);
+    glGenBuffers(1, &__SSBO_CURR_POSITIONS_FRONT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_CURR_POSITIONS_FRONT);
     glBufferData(
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, __SSBO_CURR_POSITIONS);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, __SSBO_CURR_POSITIONS_FRONT);
+
+    glGenBuffers(1, &__SSBO_CURR_POSITIONS_BACK);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_CURR_POSITIONS_BACK);
+    glBufferData(
+      GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
+    );
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, __SSBO_CURR_POSITIONS_BACK);
   }
 
   void init_velocities() {

@@ -8,29 +8,33 @@ layout(std430, binding = 1) readonly buffer PrevPositions {
   float g_prev_positions[];
 };
 
-layout(std430, binding = 2) readonly buffer CurrPositions {
-  float g_curr_positions[];
+layout(std430, binding = 2) readonly buffer CurrPositionsFront {
+  float g_curr_positions_front[];
 };
 
-layout(std430, binding = 9) readonly buffer ColorGroups {
-  uint g_color_groups[];
+layout(std430, binding = 3) buffer Velocities {
+  float g_velocities[];
 };
 
-layout(std430, binding = 10) readonly buffer ColorGroupOffsets {
-  uint g_color_group_offsets[];
-};
-
-uniform uint color_group;
-uniform uint color_group_size;
+uniform uint vert_count;
+uniform float time_step;
 
 void main() {
   uint g_tid = gl_GlobalInvocationID.x;
-  if (g_tid >= color_group_size) return;
+  if (g_tid >= vert_count) return;
 
-  uint vid = g_color_groups[g_color_group_offsets[color_group] + g_tid];
+  uint vid = g_tid;
 
-  
+  vec3 prev_position_i = vec3(g_prev_positions[3 * vid + 0],
+                              g_prev_positions[3 * vid + 1],
+                              g_prev_positions[3 * vid + 2]);
+  vec3 curr_position_i = vec3(g_curr_positions_front[3 * vid + 0],
+                              g_curr_positions_front[3 * vid + 1],
+                              g_curr_positions_front[3 * vid + 2]);
 
+  vec3 velocity_i = (curr_position_i - prev_position_i) / time_step;
 
-
+  g_velocities[3 * vid + 0] = velocity_i.x;
+  g_velocities[3 * vid + 1] = velocity_i.y;
+  g_velocities[3 * vid + 2] = velocity_i.z;
 }
