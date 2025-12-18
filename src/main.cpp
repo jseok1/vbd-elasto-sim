@@ -6,6 +6,7 @@
 // clang-format on
 #include <cassert>
 #include <cmath>
+#include <glm/matrix.hpp>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <vector>
@@ -211,14 +212,19 @@ int main() {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
+  glBindVertexArray(0);
+
   // === COMPUTE PIPELINE SHADERS ===
 
   // === RENDER PIPELINE SHADERS ===
-  RenderShader interiorShader;
+  RenderShader interiorShader, exteriorShader;
 
   try {
     interiorShader.build(
       "./assets/shaders/interior.vert.glsl", "./assets/shaders/interior.frag.glsl"
+    );
+    exteriorShader.build(
+      "./assets/shaders/exterior.vert.glsl", "./assets/shaders/exterior.frag.glsl"
     );
 
   } catch (const std::exception& err) {
@@ -231,8 +237,6 @@ int main() {
   const float deltaTime = 1.0f / 144.0f;
   float prevTime = glfwGetTime();
   float accumulatedTime = 0.0f;
-
-  std::cout << "Before while loop" << std::endl;
 
   while (!glfwWindowShouldClose(window)) {
     auto origin = state.camera.origin();
@@ -274,7 +278,21 @@ int main() {
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, vbd.vertCount);
     glBindVertexArray(0);
 
-    // === INTERIOR SHADER ===
+    // glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+
+    // === EXTERIOR SHADER ===
+    glm::mat4 model = vbd.transform.model();
+    exteriorShader.use();
+    exteriorShader.uniform("camera.view", state.camera.view());
+    exteriorShader.uniform("camera.projection", state.camera.projection());
+    exteriorShader.uniform("camera.u", u);
+    exteriorShader.uniform("camera.v", v);
+    exteriorShader.uniform("camera.w", w);
+    exteriorShader.uniform("model", model);
+    exteriorShader.uniform("model_inv", glm::inverse(model));
+    vbd.draw();
+
+    // glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

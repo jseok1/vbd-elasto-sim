@@ -55,11 +55,11 @@ if __name__ == "__main__":
     "--cell-size",
     type=float,
     required=False,
-    default=1.0,
+    default=4.0,
     help="maximum radius of the circumscribed spheres of the tetrahedrons",
   )
   args = parser.parse_args()
 
-  args.output = args.output or args.input.with_suffix(".msh")
+  args.output = args.output_path or args.input.with_suffix(".msh")
 
-  tetrahedralize(input_path, output_path, cell_size)
+  tetrahedalize(args.input_path, args.output_path, args.cell_size)

@@ -5,6 +5,8 @@
 #include <nlohmann/json.hpp>
 #include <vector>
 
+#include "Transform.hpp"
+
 using json = nlohmann::json;
 
 class VBD {
@@ -12,6 +14,16 @@ class VBD {
   unsigned int vertCount;
   unsigned int triCount;
   unsigned int tetCount;
+
+  unsigned int __SSBO_REST_POSITIONS, __SSBO_PREV_POSITIONS, __SSBO_CURR_POSITIONS;
+  unsigned int __SSBO_VELOCITIES;
+  unsigned int __SSBO_MASSES;
+  unsigned int __EBO_TRI_INDICES;
+  unsigned int __SSBO_TET_INDICES;
+  unsigned int __SSBO_STIFFNESSES;
+  unsigned int __VAO_SURFACE;
+
+  Transform transform;
 
   VBD()
     : vertCount{},
@@ -22,24 +34,34 @@ class VBD {
       __SSBO_CURR_POSITIONS{},
       __SSBO_VELOCITIES{},
       __SSBO_MASSES{},
-      __SSBO_TRI_INDICES{},
+      __EBO_TRI_INDICES{},
       __SSBO_TET_INDICES{},
-      __SSBO_STIFFNESSES{} {
+      __SSBO_STIFFNESSES{},
+      __VAO_SURFACE{},
+      transform{} {
     init_positions();
     init_masses();
     init_triangle_indices();
     init_tetrahedron_indices();
     init_stiffnesses();
+
+    // === DRAWING ===
+    glGenVertexArrays(1, &__VAO_SURFACE);
+    glBindVertexArray(__VAO_SURFACE);
+    glBindBuffer(GL_ARRAY_BUFFER, __SSBO_CURR_POSITIONS);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, __EBO_TRI_INDICES);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
+  }
+
+  void draw() {
+    glBindVertexArray(__VAO_SURFACE);
+    glDrawElements(GL_TRIANGLES, 3 * triCount, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
   }
 
  private:
-  unsigned int __SSBO_REST_POSITIONS, __SSBO_PREV_POSITIONS, __SSBO_CURR_POSITIONS;
-  unsigned int __SSBO_VELOCITIES;
-  unsigned int __SSBO_MASSES;
-  unsigned int __SSBO_TRI_INDICES;
-  unsigned int __SSBO_TET_INDICES;
-  unsigned int __SSBO_STIFFNESSES;
-
   void init_positions() {
     std::ifstream f("./assets/experiments/01/positions.json");
     json j = json::parse(f);
@@ -100,15 +122,11 @@ class VBD {
 
     triCount = triangles.size() / 3;
 
-    glGenBuffers(1, &__SSBO_TRI_INDICES);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_TRI_INDICES);
+    glGenBuffers(1, &__EBO_TRI_INDICES);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, __EBO_TRI_INDICES);
     glBufferData(
-      GL_SHADER_STORAGE_BUFFER,
-      sizeof(unsigned int) * 3 * triCount,
-      triangles.data(),
-      GL_STATIC_DRAW
+      GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 3 * triCount, triangles.data(), GL_STATIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, __SSBO_TRI_INDICES);
   }
 
   void init_tetrahedron_indices() {

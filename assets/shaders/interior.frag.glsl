@@ -7,5 +7,5 @@ out vec4 f_color;
 void main() {
   if (length(f_uv - vec2(0.5)) > 0.5) discard;
 
-  f_color = vec4(0.5, 0.0, 0.0, 1.0);
+  f_color = vec4(0.1, 0.1, 0.1, 1.0);
 }

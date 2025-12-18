@@ -1,7 +1,7 @@
 #version 460 core
 
-layout(std430, binding = 0) readonly buffer RestPositions {
-  float g_rest_positions[];
+layout(std430, binding = 2) readonly buffer CurrPositions {
+  float g_curr_positions[];
 };
 
 layout(location = 0) in vec3 v_xyz;  // quad
@@ -19,13 +19,11 @@ struct Camera {
 
 uniform Camera camera;
 
-const float pi = 3.1415926535;
-
 void main() {
   uint g_tid = gl_BaseInstance + gl_InstanceID;
 
   uint i = g_tid;
-  vec3 position_i = vec3(g_rest_positions[3 * i], g_rest_positions[3 * i + 1], g_rest_positions[3 * i + 2]);
+  vec3 position_i = vec3(g_curr_positions[3 * i], g_curr_positions[3 * i + 1], g_curr_positions[3 * i + 2]);
 
   gl_Position = camera.projection * camera.view * vec4(position_i + camera.u * v_xyz.x + camera.v * v_xyz.y, 1.0);
 
