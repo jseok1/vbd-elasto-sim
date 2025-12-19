@@ -215,8 +215,9 @@ int main() {
   glBindVertexArray(0);
 
   // === COMPUTE PIPELINE SHADERS ===
-  ComputeShader vbdPositionUpdate, vbdVelocityUpdate;
+  ComputeShader vbdPositionInit, vbdPositionUpdate, vbdVelocityUpdate;
   try {
+    vbdPositionInit.build("./assets/shaders/vbd-0-position-init.comp.glsl");
     vbdPositionUpdate.build("./assets/shaders/vbd-1-position.comp.glsl");
     vbdVelocityUpdate.build("./assets/shaders/vbd-2-velocity.comp.glsl");
 
@@ -274,6 +275,29 @@ int main() {
     // === VBD (not synced with real-time) ===
     float timeStep = deltaTime;
 
+    // positions: t-1, t -> t, t+1
+    glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_POSITIONS_tp1_FRONT);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, vbd.__SSBO_POSITIONS_t);
+    glCopyBufferSubData(
+      GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 3 * vbd.vertCount
+    );
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    // 0. position initialization
+    vbdPositionInit.use();
+    vbdPositionInit.uniform("vert_count", vbd.vertCount);
+    vbdPositionInit.uniform("time_step", timeStep);
+    glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+    // velocities: t-1, t -> t, t+1
+    glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_VELOCITIES_tp1);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, vbd.__SSBO_VELOCITIES_t);
+    glCopyBufferSubData(
+      GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 3 * vbd.vertCount
+    );
+    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
     // y
     // DCD with x^t
     // adaptive init for x
@@ -281,9 +305,9 @@ int main() {
     for (int iter = 0; iter < iters; iter++) {
       // CCD every n_col iters
       for (unsigned int colorGroup = 0; colorGroup < vbd.colorGroupCount; colorGroup++) {
-        // 1. position update
         unsigned int colorGroupSize = vbd.colorGroupSizes[colorGroup];
 
+        // 1. position update
         vbdPositionUpdate.use();
         vbdPositionUpdate.uniform("color_group", colorGroup);
         vbdPositionUpdate.uniform("color_group_size", colorGroupSize);
@@ -291,8 +315,8 @@ int main() {
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
         // 2. ping-pong
-        glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_CURR_POSITIONS_BACK);
-        glBindBuffer(GL_COPY_WRITE_BUFFER, vbd.__SSBO_CURR_POSITIONS_FRONT);
+        glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_POSITIONS_tp1_BACK);
+        glBindBuffer(GL_COPY_WRITE_BUFFER, vbd.__SSBO_POSITIONS_tp1_FRONT);
         glCopyBufferSubData(
           GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 3 * vbd.vertCount
         );
@@ -300,7 +324,7 @@ int main() {
       }
     }
 
-    // velocity update
+    // 3. velocity update
     vbdVelocityUpdate.use();
     vbdVelocityUpdate.uniform("vert_count", vbd.vertCount);
     vbdVelocityUpdate.uniform("time_step", timeStep);
@@ -337,14 +361,6 @@ int main() {
     vbd.draw();
 
     // glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
-
-    // update previous and current positions
-    glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_CURR_POSITIONS_FRONT);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, vbd.__SSBO_PREV_POSITIONS);
-    glCopyBufferSubData(
-      GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, sizeof(float) * 3 * vbd.vertCount
-    );
-    glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

@@ -16,9 +16,10 @@ class VBD {
   unsigned int tetCount;
   unsigned int colorGroupCount;
 
-  unsigned int __SSBO_REST_POSITIONS, __SSBO_PREV_POSITIONS, __SSBO_CURR_POSITIONS_FRONT,
-    __SSBO_CURR_POSITIONS_BACK;
-  unsigned int __SSBO_VELOCITIES;
+  unsigned int __SSBO_POSITIONS_0, __SSBO_POSITIONS_t, __SSBO_POSITIONS_tp1_FRONT,
+    __SSBO_POSITIONS_tp1_BACK;
+  unsigned int __SSBO_VELOCITIES_t;
+  unsigned int __SSBO_VELOCITIES_tp1;
   unsigned int __SSBO_MASSES;
   unsigned int __EBO_TRI_INDICES;
   unsigned int __SSBO_TET_INDICES;
@@ -37,11 +38,12 @@ class VBD {
     : vertCount{},
       triCount{},
       tetCount{},
-      __SSBO_REST_POSITIONS{},
-      __SSBO_PREV_POSITIONS{},
-      __SSBO_CURR_POSITIONS_FRONT{},
-      __SSBO_CURR_POSITIONS_BACK{},
-      __SSBO_VELOCITIES{},
+      __SSBO_POSITIONS_0{},
+      __SSBO_POSITIONS_t{},
+      __SSBO_POSITIONS_tp1_FRONT{},
+      __SSBO_POSITIONS_tp1_BACK{},
+      __SSBO_VELOCITIES_t{},
+      __SSBO_VELOCITIES_tp1{},
       __SSBO_MASSES{},
       __EBO_TRI_INDICES{},
       __SSBO_TET_INDICES{},
@@ -54,6 +56,7 @@ class VBD {
       transform{},
       colorGroupSizes{} {
     init_positions();
+    init_velocities();
     init_masses();
     init_triangle_indices();
     init_tetrahedron_indices();
@@ -66,7 +69,7 @@ class VBD {
     // === DRAWING ===
     glGenVertexArrays(1, &__VAO_SURFACE);
     glBindVertexArray(__VAO_SURFACE);
-    glBindBuffer(GL_ARRAY_BUFFER, __SSBO_CURR_POSITIONS_FRONT);
+    glBindBuffer(GL_ARRAY_BUFFER, __SSBO_POSITIONS_tp1_FRONT);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, __EBO_TRI_INDICES);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -88,40 +91,46 @@ class VBD {
 
     vertCount = positions.size() / 3;
 
-    glGenBuffers(1, &__SSBO_REST_POSITIONS);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_REST_POSITIONS);
+    glGenBuffers(1, &__SSBO_POSITIONS_0);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_0);
     glBufferData(
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_STATIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, __SSBO_REST_POSITIONS);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, __SSBO_POSITIONS_0);
 
-    glGenBuffers(1, &__SSBO_PREV_POSITIONS);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_PREV_POSITIONS);
+    glGenBuffers(1, &__SSBO_POSITIONS_t);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_t);
     glBufferData(
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, __SSBO_PREV_POSITIONS);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, __SSBO_POSITIONS_t);
 
-    glGenBuffers(1, &__SSBO_CURR_POSITIONS_FRONT);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_CURR_POSITIONS_FRONT);
+    glGenBuffers(1, &__SSBO_POSITIONS_tp1_FRONT);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_tp1_FRONT);
     glBufferData(
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, __SSBO_CURR_POSITIONS_FRONT);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, __SSBO_POSITIONS_tp1_FRONT);
 
-    glGenBuffers(1, &__SSBO_CURR_POSITIONS_BACK);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_CURR_POSITIONS_BACK);
+    glGenBuffers(1, &__SSBO_POSITIONS_tp1_BACK);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_tp1_BACK);
     glBufferData(
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, __SSBO_CURR_POSITIONS_BACK);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, __SSBO_POSITIONS_tp1_BACK);
   }
 
   void init_velocities() {
-    glGenBuffers(1, &__SSBO_VELOCITIES);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VELOCITIES);
+    glGenBuffers(1, &__SSBO_VELOCITIES_t);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VELOCITIES_t);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, nullptr, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, __SSBO_VELOCITIES);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, __SSBO_VELOCITIES_t);
+    glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
+
+    glGenBuffers(1, &__SSBO_VELOCITIES_tp1);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VELOCITIES_tp1);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, __SSBO_VELOCITIES_tp1);
     glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
   }
 
