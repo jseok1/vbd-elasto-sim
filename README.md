@@ -29,6 +29,9 @@ docker run --rm -it \
     -i /workspace/assets/models/spot/spot_tetrahedralized.msh
 ```
 
+On Fedora, try `-v "$(pwd):/workspace:Z"` if you run into a permission error on the mounted `.py`
+file.
+
 ## Usage
 
 This project relies on OpenGL 4.6, the Conan C/C++ package manager, and CMake build system. To install dependencies and build from the root directory, create a [Conan profile](https://docs.conan.io/2/reference/config_files/profiles.html) and run the following commands.

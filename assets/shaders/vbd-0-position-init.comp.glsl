@@ -24,7 +24,7 @@ layout(std430, binding = 12) readonly buffer Velocities_t {
 uniform uint vert_count;
 uniform float h;
 
-const float gravity = 0.0;//-0.000000981;
+const float gravity = -9.81;
 const vec3 acceleration_ext = vec3(0.0, gravity, 0.0);
 
 void main() {

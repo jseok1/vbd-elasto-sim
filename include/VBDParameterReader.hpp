@@ -2,6 +2,7 @@
 #include <glad/glad.h>
 
 #include <fstream>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <vector>
 
@@ -93,7 +94,7 @@ class VBD {
 
     for (int i = 0; i < vertCount; i++) {
       // translate y-coordinate
-      positions[3 * i + 1] += 3.0;
+      positions[3 * i + 1] += 1.0;
     }
 
     glGenBuffers(1, &__SSBO_POSITIONS_0);
@@ -102,6 +103,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, __SSBO_POSITIONS_0);
+    glObjectLabel(GL_BUFFER, __SSBO_POSITIONS_0, -1, "POSITIONS_0");
 
     glGenBuffers(1, &__SSBO_POSITIONS_t);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_t);
@@ -109,6 +111,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, __SSBO_POSITIONS_t);
+    glObjectLabel(GL_BUFFER, __SSBO_POSITIONS_t, -1, "POSITIONS_t");
 
     glGenBuffers(1, &__SSBO_POSITIONS_tp1_FRONT);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_tp1_FRONT);
@@ -116,6 +119,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, __SSBO_POSITIONS_tp1_FRONT);
+    glObjectLabel(GL_BUFFER, __SSBO_POSITIONS_tp1_FRONT, -1, "POSITIONS_t1p_FRONT");
 
     glGenBuffers(1, &__SSBO_POSITIONS_tp1_BACK);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_tp1_BACK);
@@ -123,6 +127,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, positions.data(), GL_DYNAMIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 11, __SSBO_POSITIONS_tp1_BACK);
+    glObjectLabel(GL_BUFFER, __SSBO_POSITIONS_tp1_BACK, -1, "POSITIONS_t1p_BACK");
   }
 
   void init_velocities() {
@@ -131,12 +136,14 @@ class VBD {
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, __SSBO_VELOCITIES_t);
     glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
+    glObjectLabel(GL_BUFFER, __SSBO_VELOCITIES_t, -1, "VELOCITIES_t");
 
     glGenBuffers(1, &__SSBO_VELOCITIES_tp1);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VELOCITIES_tp1);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vertCount, nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 12, __SSBO_VELOCITIES_tp1);
     glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
+    glObjectLabel(GL_BUFFER, __SSBO_VELOCITIES_tp1, -1, "VELOCITIES_tp1");
   }
 
   void init_masses() {
@@ -151,6 +158,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * vertCount, masses.data(), GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, __SSBO_MASSES);
+    glObjectLabel(GL_BUFFER, __SSBO_MASSES, -1, "MASSES");
   }
 
   void init_triangle_indices() {
@@ -166,6 +174,7 @@ class VBD {
     glBufferData(
       GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 3 * triCount, triangles.data(), GL_STATIC_DRAW
     );
+    glObjectLabel(GL_BUFFER, __EBO_TRI_INDICES, -1, "TRI_INDICES");
   }
 
   void init_tetrahedron_indices() {
@@ -185,6 +194,7 @@ class VBD {
       GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, __SSBO_TET_INDICES);
+    glObjectLabel(GL_BUFFER, __SSBO_TET_INDICES, -1, "TET_INDICES");
   }
 
   void init_stiffnesses() {
@@ -199,6 +209,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * 144 * tetCount, stiffnesses.data(), GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, __SSBO_STIFFNESSES);
+    glObjectLabel(GL_BUFFER, __SSBO_STIFFNESSES, -1, "STIFFNESSES");
   }
 
   void init_vertex_to_tetrahedra() {
@@ -213,6 +224,7 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * mapping.size(), mapping.data(), GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
+    glObjectLabel(GL_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA, -1, "VERTEX_INDEX_TO_TETRAHEDRA");
   }
 
   void init_vertex_to_tetrahedra_offsets() {
@@ -227,6 +239,9 @@ class VBD {
       GL_SHADER_STORAGE_BUFFER, sizeof(float) * mapping.size(), mapping.data(), GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
+    glObjectLabel(
+      GL_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS, -1, "VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS"
+    );
   }
 
   void init_color_groups() {
@@ -244,6 +259,7 @@ class VBD {
       GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 9, __SSBO_COLOR_GROUPS);
+    glObjectLabel(GL_BUFFER, __SSBO_COLOR_GROUPS, -1, "COLOR_GROUPS");
   }
 
   void init_color_group_offsets() {
@@ -262,9 +278,12 @@ class VBD {
       GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 10, __SSBO_COLOR_GROUP_OFFSETS);
+    glObjectLabel(GL_BUFFER, __SSBO_COLOR_GROUP_OFFSETS, -1, "COLOR_GROUP_OFFSETS");
 
     // [[*,*], [*,*,*], [*,*,*,*]]
     // [0, 2, 5, 9]
+
+    std::cout << "# color groups: " << colorGroupCount << std::endl;
 
     for (int colorGroup = 0; colorGroup < colorGroupCount; colorGroup++) {
       colorGroupSizes.push_back(mapping[colorGroup + 1] - mapping[colorGroup]);

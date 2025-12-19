@@ -37,20 +37,24 @@ layout(std430, binding = 10) readonly buffer ColorGroupOffsets {
   uint g_color_group_offsets[];
 };
 
+layout(std430, binding = 14) buffer Debug {
+  float g_debug[];
+};
+
 uniform uint color_group;
 uniform uint color_group_size;
 uniform float h;
 
-const float gravity = 0.0;//-0.000000981;
+const float gravity = -9.81;
 const vec3 acceleration_ext = vec3(0.0, gravity, 0.0);
 
-const float k = 100.0;
+const float k = 1e6;
 
 vec3 force(uint vid, float mass, vec3 position_t, vec3 position_tp1, vec3 velocity_t) {
   vec3 force = mass / (h * h) * (position_tp1 - (position_t + h * velocity_t + h * h * acceleration_ext));
 
-  // bounding box
-  // force += vec3(0.0, min(0.0, position_tp1.y), 0.0);
+  // bounding box (y = 0) quadratic energy
+  force[1] += position_tp1.y < 0.0 ? k * position_tp1.y : 0.0;
 
   return -force;
 }
@@ -58,10 +62,8 @@ vec3 force(uint vid, float mass, vec3 position_t, vec3 position_tp1, vec3 veloci
 mat3 hessian(uint vid, float mass, vec3 position_tp1){
   mat3 hessian = mass / (h * h) * mat3(1.0);
 
-  // bounding box
-  mat3 hessian_bb = mat3(0.0);
-  hessian_bb[1][1] = position_tp1.y < 0.0 ? k : 0.0;
-  hessian += hessian_bb;
+  // bounding box (y = 0) quadratic energy
+  hessian[1][1] += position_tp1.y < 0.0 ? k : 0.0;
 
   // elastic potential
 
@@ -89,7 +91,13 @@ void main() {
   vec3 force = force(vid, mass_i, position_t_i, position_tp1_i, velocity_t_i);
   mat3 hessian = hessian(vid, mass_i, position_tp1_i); // is this right?
 
-  position_tp1_i += inverse(hessian) * force;
+  // if this vertex's Hessian is rank-deficient, skip it
+  if (determinant(hessian) > 1e-8) position_tp1_i += inverse(hessian) * force;
+
+  float res = determinant(hessian);
+  g_debug[3 * vid + 0] = res;
+  g_debug[3 * vid + 1] = 0.0;
+  g_debug[3 * vid + 2] = 0.0;
 
   g_positions_tp1_back[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_back[3 * vid + 1] = position_tp1_i.y;

@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 
+#include <filesystem>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -9,6 +10,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
+namespace fs = std::filesystem;
 
 ComputeShader::ComputeShader() {}
 
@@ -24,6 +27,10 @@ ComputeShader::~ComputeShader() {
 void ComputeShader::build(const std::string& computeShaderPath) {
   GLuint computerShaderId = compile(GL_COMPUTE_SHADER, computeShaderPath);
   link(computerShaderId);
+
+  fs::path p(computeShaderPath);
+  std::string computeShaderFileName = p.filename().string();
+  glObjectLabel(GL_SHADER, computerShaderId, -1, computeShaderFileName.c_str());
 }
 
 GLuint ComputeShader::compile(GLenum shaderType, const std::string& shaderPath) {

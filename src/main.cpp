@@ -24,7 +24,7 @@ int height = 1080;
 const float near = 0.01f;
 const float far = 100.0f;
 const bool throttle = true;
-const bool fullscreen = false;
+const bool fullscreen = true;
 
 const float speed = 5.0f;
 const float sensitivity = 0.05f;
@@ -66,7 +66,7 @@ void processMouse(GLFWwindow* window, double currXCoord, double currYCoord) {
 
 void processKey(GLFWwindow* window, int key, int scancode, int action, int mods) {
   if (action == GLFW_PRESS) {
-    if (key == GLFW_KEY_ESCAPE) {
+    if (key == GLFW_KEY_ESCAPE or key == GLFW_KEY_CAPS_LOCK) {
       glfwSetWindowShouldClose(window, GL_TRUE);
       return;
     }
@@ -131,6 +131,10 @@ void processKey(GLFWwindow* window, int key, int scancode, int action, int mods)
 }
 
 int main() {
+  glfwSetErrorCallback([](int error, const char* description) {
+    fprintf(stderr, "GLFW Error (%d): %s\n", error, description);
+  });
+
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -172,6 +176,8 @@ int main() {
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_CULL_FACE);
+  glEnable(GL_DEBUG_OUTPUT);
+  glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 
   state.camera = Camera(fovy, width, height, near, far);  // bad
   state.camera.translateTo(glm::vec3(0.0, 0.0, 10.0));
@@ -243,6 +249,17 @@ int main() {
 
   VBD vbd{};
 
+  // === DEBUG ===
+  unsigned int __SSBO_DEBUG;
+  glGenBuffers(1, &__SSBO_DEBUG);
+  glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_DEBUG);
+  glBufferData(
+    GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vbd.vertCount, nullptr, GL_DYNAMIC_DRAW
+  );
+  glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 14, __SSBO_DEBUG);
+  glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
+  glObjectLabel(GL_BUFFER, __SSBO_DEBUG, -1, "DEBUG");
+
   const float deltaTime = 1.0f / 144.0f;
   float prevTime = glfwGetTime();
   float accumulatedTime = 0.0f;
@@ -301,7 +318,7 @@ int main() {
     // y
     // DCD with x^t
     // adaptive init for x
-    int iters = 4;
+    int iters = 1;
     for (int iter = 0; iter < iters; iter++) {
       // CCD every n_col iters
       for (unsigned int colorGroup = 0; colorGroup < vbd.colorGroupCount; colorGroup++) {
@@ -311,6 +328,7 @@ int main() {
         vbdPositionUpdate.use();
         vbdPositionUpdate.uniform("color_group", colorGroup);
         vbdPositionUpdate.uniform("color_group_size", colorGroupSize);
+        vbdPositionUpdate.uniform("h", h);
         glDispatchCompute((colorGroupSize + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
         glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
