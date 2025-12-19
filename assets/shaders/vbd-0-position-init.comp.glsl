@@ -46,6 +46,15 @@ void main() {
 
   vec3 acceleration_t_i = (velocity_t_i - velocity_tm1_i) / h;
 
+  // === PREVIOUS POSITION ===
+  // vec3 position_tp1_i = position_t_i;
+
+  // === INERTIA ===
+  // vec3 position_tp1_i = position_t_i + h * velocity_t_i;
+
+  // === INERTIA AND ACCELERATION ===
+  vec3 position_tp1_i = position_t_i + h * velocity_t_i + h * h * acceleration_ext;
+
   // === ADAPTIVE ===
   // // only an estimate
   // vec3 acceleration_tp1_i = clamp(
@@ -54,8 +63,6 @@ void main() {
   //
   // vec3 position_tp1_i = position_t_i + h * velocity_t_i + h * h * acceleration_tp1_i;
 
-  // === BASIC ===
-  vec3 position_tp1_i = position_t_i;
 
   g_positions_tp1_front[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_front[3 * vid + 1] = position_tp1_i.y;

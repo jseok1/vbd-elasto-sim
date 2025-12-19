@@ -301,7 +301,7 @@ int main() {
     if (state.isResetting) {
       stretchY.use();
       stretchY.uniform("vert_count", vbd.vertCount);
-      stretchY.uniform("stretch_factor", 1.5f);
+      stretchY.uniform("stretch_factor", 2.0f);
       glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -338,7 +338,7 @@ int main() {
       // y
       // DCD with x^t
       // adaptive init for x
-      int iters = 1;
+      int iters = 12;
       for (int iter = 0; iter < iters; iter++) {
         // CCD every n_col iters
         for (unsigned int colorGroup = 0; colorGroup < vbd.colorGroupCount; colorGroup++) {
