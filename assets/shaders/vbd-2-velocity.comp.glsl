@@ -13,7 +13,7 @@ layout(std430, binding = 2) readonly buffer Positions_tp1_Front {
 };
 
 // careful, this is t (not tp1) in vbd-0-position-init.comp.glsl
-layout(std430, binding = 3) buffer Velocities_tp1 {
+layout(std430, binding = 12) buffer Velocities_tp1 {
   float g_velocities_tp1[];
 };
 

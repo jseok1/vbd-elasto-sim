@@ -216,12 +216,15 @@ class VBD {
     std::ifstream f("./assets/experiments/01/vertex-to-tetrahedra.json");
     json j = json::parse(f);
 
-    std::vector<float> mapping = j.get<std::vector<float>>();
+    std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
 
     glGenBuffers(1, &__SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
     glBufferData(
-      GL_SHADER_STORAGE_BUFFER, sizeof(float) * mapping.size(), mapping.data(), GL_STATIC_DRAW
+      GL_SHADER_STORAGE_BUFFER,
+      sizeof(unsigned int) * mapping.size(),
+      mapping.data(),
+      GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 7, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA);
     glObjectLabel(GL_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA, -1, "VERTEX_INDEX_TO_TETRAHEDRA");
@@ -231,12 +234,15 @@ class VBD {
     std::ifstream f("./assets/experiments/01/vertex-to-tetrahedra-offsets.json");
     json j = json::parse(f);
 
-    std::vector<float> mapping = j.get<std::vector<float>>();
+    std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
 
     glGenBuffers(1, &__SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
     glBufferData(
-      GL_SHADER_STORAGE_BUFFER, sizeof(float) * mapping.size(), mapping.data(), GL_STATIC_DRAW
+      GL_SHADER_STORAGE_BUFFER,
+      sizeof(unsigned int) * mapping.size(),
+      mapping.data(),
+      GL_STATIC_DRAW
     );
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 8, __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS);
     glObjectLabel(
