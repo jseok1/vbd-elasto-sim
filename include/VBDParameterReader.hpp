@@ -91,6 +91,11 @@ class VBD {
 
     vertCount = positions.size() / 3;
 
+    for (int i = 0; i < vertCount; i++) {
+      // translate y-coordinate
+      positions[3 * i + 1] += 3.0;
+    }
+
     glGenBuffers(1, &__SSBO_POSITIONS_0);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_POSITIONS_0);
     glBufferData(

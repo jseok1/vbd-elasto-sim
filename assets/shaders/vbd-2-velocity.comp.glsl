@@ -18,7 +18,7 @@ layout(std430, binding = 3) buffer Velocities_tp1 {
 };
 
 uniform uint vert_count;
-uniform float time_step;
+uniform float h;
 
 void main() {
   uint g_tid = gl_GlobalInvocationID.x;
@@ -33,7 +33,7 @@ void main() {
                              g_positions_tp1_front[3 * vid + 1],
                              g_positions_tp1_front[3 * vid + 2]);
 
-  vec3 velocity_tp1_i = (position_tp1_i - position_t_i) / time_step;
+  vec3 velocity_tp1_i = (position_tp1_i - position_t_i) / h;
 
   g_velocities_tp1[3 * vid + 0] = velocity_tp1_i.x;
   g_velocities_tp1[3 * vid + 1] = velocity_tp1_i.y;

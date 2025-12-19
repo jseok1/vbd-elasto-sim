@@ -22,9 +22,9 @@ layout(std430, binding = 12) readonly buffer Velocities_t {
 
 
 uniform uint vert_count;
-uniform float time_step;
+uniform float h;
 
-const float gravity = -9.81;
+const float gravity = 0.0;//-0.000000981;
 const vec3 acceleration_ext = vec3(0.0, gravity, 0.0);
 
 void main() {
@@ -44,14 +44,18 @@ void main() {
                            g_velocities_t[3 * vid + 1],
                            g_velocities_t[3 * vid + 2]);
 
-  vec3 acceleration_t_i = (velocity_t_i - velocity_tm1_i) / time_step;
+  vec3 acceleration_t_i = (velocity_t_i - velocity_tm1_i) / h;
 
-  // only an estimate
-  vec3 acceleration_tp1_i = clamp(
-    dot(acceleration_t_i, normalize(acceleration_ext)), 0.0, length(acceleration_ext)
-  ) * normalize(acceleration_ext);
+  // === ADAPTIVE ===
+  // // only an estimate
+  // vec3 acceleration_tp1_i = clamp(
+  //   dot(acceleration_t_i, normalize(acceleration_ext)), 0.0, length(acceleration_ext)
+  // ) * normalize(acceleration_ext);
+  //
+  // vec3 position_tp1_i = position_t_i + h * velocity_t_i + h * h * acceleration_tp1_i;
 
-  vec3 position_tp1_i = position_t_i + time_step * velocity_t_i + time_step * time_step * acceleration_tp1_i;
+  // === BASIC ===
+  vec3 position_tp1_i = position_t_i;
 
   g_positions_tp1_front[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_front[3 * vid + 1] = position_tp1_i.y;

@@ -273,7 +273,7 @@ int main() {
     }
 
     // === VBD (not synced with real-time) ===
-    float timeStep = deltaTime;
+    float h = deltaTime;
 
     // positions: t-1, t -> t, t+1
     glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_POSITIONS_tp1_FRONT);
@@ -286,7 +286,7 @@ int main() {
     // 0. position initialization
     vbdPositionInit.use();
     vbdPositionInit.uniform("vert_count", vbd.vertCount);
-    vbdPositionInit.uniform("time_step", timeStep);
+    vbdPositionInit.uniform("h", h);
     glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -327,7 +327,7 @@ int main() {
     // 3. velocity update
     vbdVelocityUpdate.use();
     vbdVelocityUpdate.uniform("vert_count", vbd.vertCount);
-    vbdVelocityUpdate.uniform("time_step", timeStep);
+    vbdVelocityUpdate.uniform("h", h);
     glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
     glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
