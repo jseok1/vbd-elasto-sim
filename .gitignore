@@ -2,5 +2,8 @@
 build
 CMakeUserPresets.json
 
+# remove
+stiffnesses.json
+
 # my personal WSL2 + MSYS2 clangd compatibility script for building
 build.sh
