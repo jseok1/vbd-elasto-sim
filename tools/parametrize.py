@@ -6,7 +6,9 @@ import numpy as np
 import pymesh
 
 
-def parametrize(path: str, density: float, young: float, poisson: float) -> None:
+def parametrize(
+  path: str, experiment_path: str, density: float, young: float, poisson: float
+) -> None:
   mesh = pymesh.load_mesh(path)
   V = mesh.num_vertices
   E = mesh.num_elements
@@ -84,22 +86,28 @@ def parametrize(path: str, density: float, young: float, poisson: float) -> None
       vertex_to_tetrahedra[v - 1]
     )
 
-  with open("/workspace/assets/experiments/01/vertex-to-tetrahedra.json", "w") as file:
+  with open(
+    f"/workspace/assets/experiments/{experiment_path}/vertex-to-tetrahedra.json", "w"
+  ) as file:
     json.dump(list(itertools.chain.from_iterable(vertex_to_tetrahedra)), file)
 
-  with open("/workspace/assets/experiments/01/vertex-to-tetrahedra-offsets.json", "w") as file:
+  with open(
+    f"/workspace/assets/experiments/{experiment_path}/vertex-to-tetrahedra-offsets.json", "w"
+  ) as file:
     json.dump(vertex_to_tetrahedra_offsets, file)
 
-  with open("/workspace/assets/experiments/01/positions.json", "w") as file:
+  with open(f"/workspace/assets/experiments/{experiment_path}/positions.json", "w") as file:
     json.dump(mesh.vertices.flatten().tolist(), file)
 
-  with open("/workspace/assets/experiments/01/tetrahedron-indices.json", "w") as file:
+  with open(
+    f"/workspace/assets/experiments/{experiment_path}/tetrahedron-indices.json", "w"
+  ) as file:
     json.dump(mesh.elements.flatten().tolist(), file)
 
-  with open("/workspace/assets/experiments/01/masses.json", "w") as file:
+  with open(f"/workspace/assets/experiments/{experiment_path}/masses.json", "w") as file:
     json.dump(mass, file)
 
-  with open("/workspace/assets/experiments/01/stiffnesses.json", "w") as file:
+  with open(f"/workspace/assets/experiments/{experiment_path}/stiffnesses.json", "w") as file:
     json.dump(stiffness, file)
 
   # surface triangles
@@ -162,7 +170,7 @@ def parametrize(path: str, density: float, young: float, poisson: float) -> None
   #   n = np.cross(mesh.vertices[j] - mesh.vertices[i], mesh.vertices[k] - mesh.vertices[i])
   #   assert np.dot(n, mesh.vertices[i] - centroid) > 0
 
-  with open("/workspace/assets/experiments/01/triangle-indices.json", "w") as file:
+  with open(f"/workspace/assets/experiments/{experiment_path}/triangle-indices.json", "w") as file:
     json.dump(oriented_faces, file)
 
   # vertex pre-coloring
@@ -202,16 +210,21 @@ def parametrize(path: str, density: float, young: float, poisson: float) -> None
   for g in range(1, C + 1):
     color_group_offsets[g] = color_group_offsets[g - 1] + len(color_groups[g - 1])
 
-  with open("/workspace/assets/experiments/01/color-groups.json", "w") as file:
+  with open(f"/workspace/assets/experiments/{experiment_path}/color-groups.json", "w") as file:
     json.dump(list(itertools.chain.from_iterable(color_groups)), file)
 
-  with open("/workspace/assets/experiments/01/color-group-offsets.json", "w") as file:
+  with open(
+    f"/workspace/assets/experiments/{experiment_path}/color-group-offsets.json", "w"
+  ) as file:
     json.dump(color_group_offsets, file)
 
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser()
-  parser.add_argument("-i", "--path", type=str, required=True, help="path to tetrahedral mesh")
+  parser.add_argument(
+    "-i", "--input_path", type=str, required=True, help="path to tetrahedral mesh"
+  )
+  parser.add_argument("-e", "--experiment", type=str, required=True, help="experiment folder")
   parser.add_argument(
     "-d",
     "--density",
@@ -238,4 +251,4 @@ if __name__ == "__main__":
   )
   args = parser.parse_args()
 
-  parametrize(args.path, args.density, args.young, args.poisson)
+  parametrize(args.input_path, args.experiment, args.density, args.young, args.poisson)

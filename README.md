@@ -6,7 +6,11 @@
 
 ## Preprocessing
 
-This section is only relevant if you want to use your own meshes.
+This section is only relevant if you want to use your own meshes. Preprocessing is done in Python
+using the `pymesh` package. The instructions below run `pymesh` inside its official Docker container image.
+
+On Fedora, try `-v "$(pwd):/workspace:Z"` if you run into a permission error on the mounted `.py`
+file. You may also need to run with `sudo` privileges.
 
 ### Tetrahedralization
 
@@ -27,10 +31,8 @@ docker run --rm -it \
   pymesh/pymesh \
   python /workspace/tools/parametrize.py \
     -i /workspace/assets/models/spot/spot_tetrahedralized.msh
+    -e 01
 ```
-
-On Fedora, try `-v "$(pwd):/workspace:Z"` if you run into a permission error on the mounted `.py`
-file.
 
 ## Usage
 

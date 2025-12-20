@@ -78,17 +78,23 @@ void processKey(GLFWwindow* window, int key, int scancode, int action, int mods)
       return;
     }
 
-    if (key == GLFW_KEY_1) {
+    if (key == GLFW_KEY_R) {
       state.isResetting1 = true;
       state.isResetting2 = false;
       return;
     }
 
-    if (key == GLFW_KEY_2) {
-      state.isResetting1 = false;
-      state.isResetting2 = true;
-      return;
-    }
+    // if (key == GLFW_KEY_1) {
+    //   state.isResetting1 = true;
+    //   state.isResetting2 = false;
+    //   return;
+    // }
+    //
+    // if (key == GLFW_KEY_2) {
+    //   state.isResetting1 = false;
+    //   state.isResetting2 = true;
+    //   return;
+    // }
 
     if (key == GLFW_KEY_W) {
       state.isMovingForward = true;
@@ -144,7 +150,11 @@ void processKey(GLFWwindow* window, int key, int scancode, int action, int mods)
   }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+  if (argc != 2) {
+    std::cout << "Usage: ./vbd-elasto-sim <01|02>" << std::endl;
+  }
+
   glfwSetErrorCallback([](int error, const char* description) {
     fprintf(stderr, "GLFW Error (%d): %s\n", error, description);
   });
@@ -265,7 +275,8 @@ int main() {
     return 1;
   }
 
-  VBD vbd{};
+  std::string experiment{argv[1]};
+  VBD vbd{experiment};
   std::cout << "min: (" << vbd.min.x << ", " << vbd.min.y << ", " << vbd.min.z << ")" << std::endl;
   std::cout << "max: (" << vbd.max.x << ", " << vbd.max.y << ", " << vbd.max.z << ")" << std::endl;
 

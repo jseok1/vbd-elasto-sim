@@ -1,9 +1,12 @@
 #pragma once
 #include <glad/glad.h>
 
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <sstream>
+#include <string>
 #include <vector>
 
 #include "Transform.hpp"
@@ -12,6 +15,8 @@ using json = nlohmann::json;
 
 class VBD {
  public:
+  std::string experiment;
+
   unsigned int vertCount;
   unsigned int triCount;
   unsigned int tetCount;
@@ -39,8 +44,9 @@ class VBD {
 
   std::vector<unsigned int> colorGroupSizes;
 
-  VBD()
-    : vertCount{},
+  VBD(const std::string &experiment)
+    : experiment{experiment},
+      vertCount{},
       triCount{},
       tetCount{},
       __SSBO_POSITIONS_0{},
@@ -79,7 +85,7 @@ class VBD {
     glBindBuffer(GL_ARRAY_BUFFER, __SSBO_POSITIONS_tp1_FRONT);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, __EBO_TRI_INDICES);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glBindVertexArray(0);
   }
 
@@ -91,7 +97,9 @@ class VBD {
 
  private:
   void init_positions() {
-    std::ifstream f("./assets/experiments/01/positions.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/positions.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<float> positions = j.get<std::vector<float>>();
@@ -157,7 +165,9 @@ class VBD {
   }
 
   void init_masses() {
-    std::ifstream f("./assets/experiments/01/masses.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/masses.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<float> masses = j.get<std::vector<float>>();
@@ -172,7 +182,9 @@ class VBD {
   }
 
   void init_triangle_indices() {
-    std::ifstream f("./assets/experiments/01/triangle-indices.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/triangle-indices.json";
+    std::ifstream f(ss.str());
     json data = json::parse(f);
 
     std::vector<unsigned int> triangles = data.get<std::vector<unsigned int>>();
@@ -188,7 +200,9 @@ class VBD {
   }
 
   void init_tetrahedron_indices() {
-    std::ifstream f("./assets/experiments/01/tetrahedron-indices.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/tetrahedron-indices.json";
+    std::ifstream f(ss.str());
     json data = json::parse(f);
 
     std::vector<unsigned int> tetrahedra = data.get<std::vector<unsigned int>>();
@@ -208,7 +222,9 @@ class VBD {
   }
 
   void init_stiffnesses() {
-    std::ifstream f("./assets/experiments/01/stiffnesses.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/stiffnesses.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<float> stiffnesses = j.get<std::vector<float>>();
@@ -223,7 +239,9 @@ class VBD {
   }
 
   void init_vertex_to_tetrahedra() {
-    std::ifstream f("./assets/experiments/01/vertex-to-tetrahedra.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/vertex-to-tetrahedra.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
@@ -241,7 +259,9 @@ class VBD {
   }
 
   void init_vertex_to_tetrahedra_offsets() {
-    std::ifstream f("./assets/experiments/01/vertex-to-tetrahedra-offsets.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/vertex-to-tetrahedra-offsets.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
@@ -261,7 +281,9 @@ class VBD {
   }
 
   void init_color_groups() {
-    std::ifstream f("./assets/experiments/01/color-groups.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/color-groups.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
@@ -279,7 +301,9 @@ class VBD {
   }
 
   void init_color_group_offsets() {
-    std::ifstream f("./assets/experiments/01/color-group-offsets.json");
+    std::ostringstream ss;
+    ss << "./assets/experiments/" << experiment << "/color-group-offsets.json";
+    std::ifstream f(ss.str());
     json j = json::parse(f);
 
     std::vector<unsigned int> mapping = j.get<std::vector<unsigned int>>();
