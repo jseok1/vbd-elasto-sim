@@ -274,7 +274,7 @@ int main() {
   glGenBuffers(1, &__SSBO_DEBUG);
   glBindBuffer(GL_SHADER_STORAGE_BUFFER, __SSBO_DEBUG);
   glBufferData(
-    GL_SHADER_STORAGE_BUFFER, sizeof(float) * 3 * vbd.vertCount, nullptr, GL_DYNAMIC_DRAW
+    GL_SHADER_STORAGE_BUFFER, sizeof(float) * 6 * vbd.vertCount, nullptr, GL_DYNAMIC_DRAW
   );
   glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 14, __SSBO_DEBUG);
   glClearBufferData(GL_SHADER_STORAGE_BUFFER, GL_R32F, GL_RED, GL_FLOAT, nullptr);
@@ -284,6 +284,7 @@ int main() {
   float prevTime = glfwGetTime();
   float accumulatedTime = 0.0f;
 
+  unsigned int count = 0;
   while (!glfwWindowShouldClose(window)) {
     auto origin = state.camera.origin();
     auto [u, v, w] = state.camera.basis();
@@ -314,14 +315,14 @@ int main() {
       stretchY.use();
       stretchY.uniform("vert_count", vbd.vertCount);
       stretchY.uniform("stretch_factor", 2.0f);
-      stretchY.uniform("min_y", vbd.min.y);
+      stretchY.uniform("min_y", (float)vbd.min.y);
       glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
       state.isResetting1 = false;
     }
 
-    // stretch
+    // translate
     if (state.isResetting2) {
       translateY.use();
       translateY.uniform("vert_count", vbd.vertCount);
@@ -361,7 +362,7 @@ int main() {
       // y
       // DCD with x^t
       // adaptive init for x
-      int iters = 12;
+      int iters = 1;
       for (int iter = 0; iter < iters; iter++) {
         // CCD every n_col iters
         for (unsigned int colorGroup = 0; colorGroup < vbd.colorGroupCount; colorGroup++) {
@@ -391,6 +392,9 @@ int main() {
       vbdVelocityUpdate.uniform("h", h);
       glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+      if (count == 1) state.isPseudoPaused = true;
+      count++;
     }
 
     debugCS.use();

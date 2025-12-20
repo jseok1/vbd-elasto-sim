@@ -31,7 +31,7 @@ void main() {
                            g_positions_0[3 * vid + 2]);
 
   vec3 position_tp1_i = position_0_i;
-  position_tp1_i.y *= min_y + (position_0_i.y - min_y) * stretch_factor;
+  position_tp1_i.y = min_y + (position_0_i.y - min_y) * stretch_factor;
 
   g_positions_tp1_front[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_front[3 * vid + 1] = position_tp1_i.y;

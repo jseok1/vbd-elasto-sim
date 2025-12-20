@@ -20,6 +20,9 @@ layout(std430, binding = 12) readonly buffer Velocities_t {
   float g_velocities_t[];
 };
 
+layout(std430, binding = 14) buffer Debug {
+  float g_debug[];
+};
 
 uniform uint vert_count;
 uniform float h;
@@ -47,13 +50,13 @@ void main() {
   vec3 acceleration_t_i = (velocity_t_i - velocity_tm1_i) / h;
 
   // === PREVIOUS POSITION ===
-  // vec3 position_tp1_i = position_t_i;
+  vec3 position_tp1_i = position_t_i;
 
   // === INERTIA ===
   // vec3 position_tp1_i = position_t_i + h * velocity_t_i;
 
   // === INERTIA AND ACCELERATION ===
-  vec3 position_tp1_i = position_t_i + h * velocity_t_i + h * h * acceleration_ext;
+  // vec3 position_tp1_i = position_t_i + h * velocity_t_i + h * h * acceleration_ext;
 
   // === ADAPTIVE ===
   // // only an estimate
@@ -62,7 +65,6 @@ void main() {
   // ) * normalize(acceleration_ext);
   //
   // vec3 position_tp1_i = position_t_i + h * velocity_t_i + h * h * acceleration_tp1_i;
-
 
   g_positions_tp1_front[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_front[3 * vid + 1] = position_tp1_i.y;

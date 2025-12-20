@@ -20,7 +20,7 @@ layout(std430, binding = 11) buffer Positions_tp1_Back {
   float g_positions_tp1_back[];
 };
 
-// careful, this is tm1 (not o) in vbd-0-position-init.comp.glsl
+// careful, this is tm1 (not 0) in vbd-0-position-init.comp.glsl
 layout(std430, binding = 3) readonly buffer Velocities_t {
   float g_velocities_t[];
 };
@@ -69,6 +69,14 @@ const float kc = 2e6;
 vec3 force(uint vid, float mass, vec3 position_t, vec3 position_tp1, vec3 velocity_t) {
   vec3 force = mass / (h * h) * (position_tp1 - (position_t + h * velocity_t + h * h * acceleration_ext));
 
+    // g_debug[6 * vid + 0] = force.x;
+    // g_debug[6 * vid + 1] = force.y;
+    // g_debug[6 * vid + 2] = force.z;
+    // g_debug[6 * vid + 3] = 0.0;
+    // g_debug[6 * vid + 4] = 0.0;
+    // g_debug[6 * vid + 5] = 0.0;
+
+
   // bounding box (quadratic) energy
   // force[1] += position_tp1.y < 0.0 ? kc * position_tp1.y : 0.0;
 
@@ -89,11 +97,17 @@ vec3 force(uint vid, float mass, vec3 position_t, vec3 position_tp1, vec3 veloci
     };
 
     // which vertex is this in this tetrahedron?
-    uint j;
+    uint j = 999;
     if (vid == tetrahedron[0]) j = 0;
-    if (vid == tetrahedron[1]) j = 1;
-    if (vid == tetrahedron[2]) j = 2;
-    if (vid == tetrahedron[3]) j = 3;
+    else if (vid == tetrahedron[1]) j = 1;
+    else if (vid == tetrahedron[2]) j = 2;
+    else if (vid == tetrahedron[3]) j = 3;
+
+    if (j < 0) {
+      g_debug[6 * vid + 0] = 999;
+      i++;
+      continue;
+    }
 
     // probably better to compute this and store it with a separate compute shader + buffer
     // (displacements)
@@ -146,35 +160,49 @@ vec3 force(uint vid, float mass, vec3 position_t, vec3 position_tp1, vec3 veloci
       )
     };
 
-    uint o = 144 * tid + 36 * j;
-    mat3 stiffnesses[4] = {
-      mat3(
-        g_stiffnesses[o +  0], g_stiffnesses[o + 12], g_stiffnesses[o + 24],
-        g_stiffnesses[o +  1], g_stiffnesses[o + 13], g_stiffnesses[o + 25],
-        g_stiffnesses[o +  2], g_stiffnesses[o + 14], g_stiffnesses[o + 26]
-      ),
-      mat3(
-        g_stiffnesses[o +  3], g_stiffnesses[o + 15], g_stiffnesses[o + 27],
-        g_stiffnesses[o +  4], g_stiffnesses[o + 16], g_stiffnesses[o + 28],
-        g_stiffnesses[o +  5], g_stiffnesses[o + 17], g_stiffnesses[o + 29]
-      ),
-      mat3(
-        g_stiffnesses[o +  6], g_stiffnesses[o + 18], g_stiffnesses[o + 30],
-        g_stiffnesses[o +  7], g_stiffnesses[o + 19], g_stiffnesses[o + 31],
-        g_stiffnesses[o +  8], g_stiffnesses[o + 20], g_stiffnesses[o + 32]
-      ),
-      mat3(
-        g_stiffnesses[o +  9], g_stiffnesses[o + 21], g_stiffnesses[o + 33],
-        g_stiffnesses[o + 10], g_stiffnesses[o + 22], g_stiffnesses[o + 34],
-        g_stiffnesses[o + 11], g_stiffnesses[o + 23], g_stiffnesses[o + 35]
-      ),
-    };
+    // g_debug[6 * vid + 0] = float(3 * tetrahedron[0] + 0);
+    // g_debug[6 * vid + 1] = float(3 * tetrahedron[0] + 1);
+    // g_debug[6 * vid + 2] = float(3 * tetrahedron[0] + 2);
+    // g_debug[6 * vid + 3] = positions_tp1[0].x;
+    // g_debug[6 * vid + 4] = positions_tp1[0].y;
+    // g_debug[6 * vid + 5] = positions_tp1[0].z;
+    //
+    //
+    //
+    // uint o = 144 * tid + 36 * j;
+    // mat3 stiffnesses[4] = {
+    //   mat3(
+    //     g_stiffnesses[o +  0], g_stiffnesses[o + 12], g_stiffnesses[o + 24],
+    //     g_stiffnesses[o +  1], g_stiffnesses[o + 13], g_stiffnesses[o + 25],
+    //     g_stiffnesses[o +  2], g_stiffnesses[o + 14], g_stiffnesses[o + 26]
+    //   ),
+    //   mat3(
+    //     g_stiffnesses[o +  3], g_stiffnesses[o + 15], g_stiffnesses[o + 27],
+    //     g_stiffnesses[o +  4], g_stiffnesses[o + 16], g_stiffnesses[o + 28],
+    //     g_stiffnesses[o +  5], g_stiffnesses[o + 17], g_stiffnesses[o + 29]
+    //   ),
+    //   mat3(
+    //     g_stiffnesses[o +  6], g_stiffnesses[o + 18], g_stiffnesses[o + 30],
+    //     g_stiffnesses[o +  7], g_stiffnesses[o + 19], g_stiffnesses[o + 31],
+    //     g_stiffnesses[o +  8], g_stiffnesses[o + 20], g_stiffnesses[o + 32]
+    //   ),
+    //   mat3(
+    //     g_stiffnesses[o +  9], g_stiffnesses[o + 21], g_stiffnesses[o + 33],
+    //     g_stiffnesses[o + 10], g_stiffnesses[o + 22], g_stiffnesses[o + 34],
+    //     g_stiffnesses[o + 11], g_stiffnesses[o + 23], g_stiffnesses[o + 35]
+    //   ),
+    // };
     // clang-format on
 
     for (int k = 0; k < 4; k++) {
-      // if displacement is positive, then force is negative (?)
-      force += stiffnesses[k] * (positions_tp1[k] - positions_0[k]);
-      // force += tetrahedron[0] - tetrahedron[0] + tetrahedron[1] - tetrahedron[1] + tetrahedron[2] - tetrahedron[2] + tetrahedron[3] - tetrahedron[3];
+      uint o = 144 * tid + 36 * j + 9 * k;
+      mat3 K = mat3(
+        g_stiffnesses[o + 0], g_stiffnesses[o + 3], g_stiffnesses[o + 6],
+        g_stiffnesses[o + 1], g_stiffnesses[o + 4], g_stiffnesses[o + 7],
+        g_stiffnesses[o + 2], g_stiffnesses[o + 5], g_stiffnesses[o + 8]
+      );
+      force += K * (positions_tp1[k] - positions_0[k]);
+      // force += stiffnesses[k] * (positions_tp1[k] - positions_0[k]);
     }
 
     i++; 
@@ -213,11 +241,16 @@ mat3 hessian(uint vid, float mass, vec3 position_tp1){
     if (vid == tetrahedron[3]) j = 3;
 
     // clang-format off
-    uint o = 144 * tid + 36 * j + 3 * j;
+    uint o = 144 * tid + 36 * j + 9 * j;
+    // hessian += mat3(
+    //   g_stiffnesses[o +  0], g_stiffnesses[o + 12], g_stiffnesses[o + 24],
+    //   g_stiffnesses[o +  1], g_stiffnesses[o + 13], g_stiffnesses[o + 25],
+    //   g_stiffnesses[o +  2], g_stiffnesses[o + 14], g_stiffnesses[o + 26]
+    // );
     hessian += mat3(
-      g_stiffnesses[o +  0], g_stiffnesses[o + 12], g_stiffnesses[o + 24],
-      g_stiffnesses[o +  1], g_stiffnesses[o + 13], g_stiffnesses[o + 25],
-      g_stiffnesses[o +  2], g_stiffnesses[o + 14], g_stiffnesses[o + 26]
+      g_stiffnesses[o + 0], g_stiffnesses[o + 3], g_stiffnesses[o + 6],
+      g_stiffnesses[o + 1], g_stiffnesses[o + 4], g_stiffnesses[o + 7],
+      g_stiffnesses[o + 2], g_stiffnesses[o + 5], g_stiffnesses[o + 8]
     );
     // clang-format on
 
@@ -249,16 +282,18 @@ void main() {
 
   // positions get really far, so forces are really big
 
-  // g_debug[3 * vid + 0] = hessian[0][0];
-  // g_debug[3 * vid + 1] = hessian[1][0];
-  // g_debug[3 * vid + 2] = hessian[2][0];
+  // g_debug[6 * vid + 0] = hessian[0][0];
+  // g_debug[6 * vid + 1] = hessian[1][0];
+  // g_debug[6 * vid + 2] = hessian[2][0];
   
-  g_debug[3 * vid + 0] = force.x;
-  g_debug[3 * vid + 1] = force.y;
-  g_debug[3 * vid + 2] = force.z;
+  // g_debug[6 * vid + 0] = force.x;
+  // g_debug[6 * vid + 1] = force.y;
+  // g_debug[6 * vid + 2] = force.z;
   
   // if this vertex's Hessian is rank-deficient, skip it
-  if (determinant(hessian) > 1e-6) position_tp1_i += inverse(hessian) * force;
+  // if (determinant(hessian) > 1e-6) position_tp1_i += inverse(hessian) * force;
+  hessian += 1e-6 * mat3(1.0);
+  position_tp1_i += inverse(hessian) * force;
 
   g_positions_tp1_back[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_back[3 * vid + 1] = position_tp1_i.y;

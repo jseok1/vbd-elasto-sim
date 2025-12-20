@@ -70,7 +70,9 @@ def parametrize(path: str, density: float, young: float, poisson: float) -> None
       ]
     )
 
-    stiffness.extend((volume * B.T @ C @ B).flatten().tolist())
+    K = volume * B.T @ C @ B
+    stiffness.extend(K.flatten().tolist())
+    assert (np.isclose(K @ np.ones((12,)), np.zeros((12,)))).all(), print(K @ np.ones((12,)))
 
     mass[v1] += density * volume / 4
     mass[v2] += density * volume / 4

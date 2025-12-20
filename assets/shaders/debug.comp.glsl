@@ -4,7 +4,7 @@
 
 layout(local_size_x = WORKGROUP_SIZE, local_size_y = 1, local_size_z = 1) in;
 
-layout(std430, binding = 0) readonly buffer Positions_0 {
+layout(std430, binding = 0) buffer Positions_0 {
   float g_positions_0[];
 };
 
@@ -36,5 +36,10 @@ void main() {
     float tempa = g_positions_tp1_front[3 * vid + 0];
     g_positions_tp1_front[3 * vid + 0] = 1.0;
     g_positions_tp1_front[3 * vid + 0] = tempa;
+
+    float tempb = g_positions_0[3 * vid + 0];
+    g_positions_0[3 * vid + 0] = 1.0;
+    g_positions_0[3 * vid + 0] = tempb;
+
   }
 }

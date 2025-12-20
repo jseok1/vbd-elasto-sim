@@ -2,11 +2,14 @@
 
 ## Introduction
 
-
+This is an implementation of vertex block descent (VBD) for elastic simulation.
 
 ## Preprocessing
 
 This section is only relevant if you want to use your own meshes.
+
+On Fedora Linux, try `-v "$(pwd):/workspace:Z"` if you run into a permission error on the mounted `.py`
+file with the following commands. You may also need to run with `sudo`.
 
 ### Tetrahedralization
 
@@ -19,7 +22,7 @@ docker run --rm -it \
     -o /workspace/assets/models/spot/spot_tetrahedralized.msh
 ```
 
-### Parametrization
+### Parametrization (FEM)
 
 ```bash
 docker run --rm -it \
@@ -29,12 +32,9 @@ docker run --rm -it \
     -i /workspace/assets/models/spot/spot_tetrahedralized.msh
 ```
 
-On Fedora, try `-v "$(pwd):/workspace:Z"` if you run into a permission error on the mounted `.py`
-file.
-
 ## Usage
 
-This project relies on OpenGL 4.6, the Conan C/C++ package manager, and CMake build system. To install dependencies and build from the root directory, create a [Conan profile](https://docs.conan.io/2/reference/config_files/profiles.html) and run the following commands.
+This project relies on OpenGL 4.6, the Conan 2 C/C++ package manager, and the CMake build system. To install dependencies and build from the root directory, create a [Conan profile](https://docs.conan.io/2/reference/config_files/profiles.html) and run the following commands.
 
 On Windows:
 

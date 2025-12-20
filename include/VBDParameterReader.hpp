@@ -105,6 +105,10 @@ class VBD {
       if (positions[3 * i + 0] > max.x) max.x = positions[3 * i + 0];
       if (positions[3 * i + 1] > max.y) max.y = positions[3 * i + 1];
       if (positions[3 * i + 2] > max.z) max.z = positions[3 * i + 2];
+      if (i < 100) {
+        std::cout << "(" << positions[3 * i + 0] << ", " << positions[3 * i + 1] << ", "
+                  << positions[3 * i + 2] << ")" << std::endl;
+      }
     }
 
     glGenBuffers(1, &__SSBO_POSITIONS_0);
