@@ -42,7 +42,7 @@ On Windows:
 conan install . --build=missing --profile=release
 cmake --preset conan-default
 cmake --build --preset conan-release
-./build/Release/sph-fluid-sim.exe
+./build/Release/vbd-elasto-sim.exe
 ```
 
 On Linux/MacOS:
@@ -51,7 +51,7 @@ On Linux/MacOS:
 conan install . --build=missing --profile=release
 cmake --preset conan-release
 cmake --build --preset conan-release
-./build/Release/sph-fluid-sim
+./build/Release/vbd-elasto-sim
 ```
 
 Use `W`, `A`, `S`, `D`, `Space`, and `Shift` to move around. Use `P` to play/pause the simulation.

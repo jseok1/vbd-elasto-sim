@@ -31,6 +31,10 @@ class VBD {
   unsigned int __SSBO_COLOR_GROUPS;
   unsigned int __SSBO_COLOR_GROUP_OFFSETS;
 
+  // bounding box
+  glm::vec3 min;
+  glm::vec3 max;
+
   Transform transform;
 
   std::vector<unsigned int> colorGroupSizes;
@@ -54,6 +58,8 @@ class VBD {
       __SSBO_VERTEX_INDEX_TO_TETRAHEDRA_OFFSETS{},
       __SSBO_COLOR_GROUPS{},
       __SSBO_COLOR_GROUP_OFFSETS{},
+      min{999.0, 999.0, 999.0},
+      max{-999.0, -999.0, -999.0},
       transform{},
       colorGroupSizes{} {
     init_positions();
@@ -93,8 +99,12 @@ class VBD {
     vertCount = positions.size() / 3;
 
     for (int i = 0; i < vertCount; i++) {
-      // translate y-coordinate
-      positions[3 * i + 1] += 1.0;
+      if (positions[3 * i + 0] < min.x) min.x = positions[3 * i + 0];
+      if (positions[3 * i + 1] < min.y) min.y = positions[3 * i + 1];
+      if (positions[3 * i + 2] < min.z) min.z = positions[3 * i + 2];
+      if (positions[3 * i + 0] > max.x) max.x = positions[3 * i + 0];
+      if (positions[3 * i + 1] > max.y) max.y = positions[3 * i + 1];
+      if (positions[3 * i + 2] > max.z) max.z = positions[3 * i + 2];
     }
 
     glGenBuffers(1, &__SSBO_POSITIONS_0);

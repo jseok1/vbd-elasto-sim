@@ -12,13 +12,7 @@ layout(std430, binding = 2) buffer Positions_tp1_Front {
   float g_positions_tp1_front[];
 };
 
-layout(std430, binding = 14) buffer Debug {
-  float g_debug[];
-};
-
 uniform uint vert_count;
-uniform float stretch_factor;
-uniform float min_y;
 
 void main() {
   uint g_tid = gl_GlobalInvocationID.x;
@@ -31,7 +25,7 @@ void main() {
                            g_positions_0[3 * vid + 2]);
 
   vec3 position_tp1_i = position_0_i;
-  position_tp1_i.y *= min_y + (position_0_i.y - min_y) * stretch_factor;
+  position_tp1_i.y += 2.0;
 
   g_positions_tp1_front[3 * vid + 0] = position_tp1_i.x;
   g_positions_tp1_front[3 * vid + 1] = position_tp1_i.y;

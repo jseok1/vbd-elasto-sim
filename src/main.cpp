@@ -38,7 +38,8 @@ struct State {
   bool isMovingDownward = false;
   bool isPaused = false;
   bool isPseudoPaused = true;
-  bool isResetting = true;
+  bool isResetting1 = true;
+  bool isResetting2 = false;
 
   Camera camera = Camera(fovy, width, height, near, far);
 } state;
@@ -77,8 +78,15 @@ void processKey(GLFWwindow* window, int key, int scancode, int action, int mods)
       return;
     }
 
-    if (key == GLFW_KEY_R) {
-      state.isResetting = true;
+    if (key == GLFW_KEY_1) {
+      state.isResetting1 = true;
+      state.isResetting2 = false;
+      return;
+    }
+
+    if (key == GLFW_KEY_2) {
+      state.isResetting1 = false;
+      state.isResetting2 = true;
       return;
     }
 
@@ -227,12 +235,14 @@ int main() {
   glBindVertexArray(0);
 
   // === COMPUTE PIPELINE SHADERS ===
-  ComputeShader vbdPositionInit, vbdPositionUpdate, vbdVelocityUpdate, stretchY, debugCS;
+  ComputeShader vbdPositionInit, vbdPositionUpdate, vbdVelocityUpdate, stretchY, translateY,
+    debugCS;
   try {
     vbdPositionInit.build("./assets/shaders/vbd-0-position-init.comp.glsl");
     vbdPositionUpdate.build("./assets/shaders/vbd-1-position.comp.glsl");
     vbdVelocityUpdate.build("./assets/shaders/vbd-2-velocity.comp.glsl");
     stretchY.build("./assets/shaders/stretch-y.comp.glsl");
+    translateY.build("./assets/shaders/translate-y.comp.glsl");
     debugCS.build("./assets/shaders/debug.comp.glsl");
 
   } catch (const std::exception& err) {
@@ -256,6 +266,8 @@ int main() {
   }
 
   VBD vbd{};
+  std::cout << "min: (" << vbd.min.x << ", " << vbd.min.y << ", " << vbd.min.z << ")" << std::endl;
+  std::cout << "max: (" << vbd.max.x << ", " << vbd.max.y << ", " << vbd.max.z << ")" << std::endl;
 
   // === DEBUG ===
   unsigned int __SSBO_DEBUG;
@@ -298,14 +310,25 @@ int main() {
     }
 
     // stretch
-    if (state.isResetting) {
+    if (state.isResetting1) {
       stretchY.use();
       stretchY.uniform("vert_count", vbd.vertCount);
       stretchY.uniform("stretch_factor", 2.0f);
+      stretchY.uniform("min_y", vbd.min.y);
       glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
       glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-      state.isResetting = false;
+      state.isResetting1 = false;
+    }
+
+    // stretch
+    if (state.isResetting2) {
+      translateY.use();
+      translateY.uniform("vert_count", vbd.vertCount);
+      glDispatchCompute((vbd.vertCount + WORKGROUP_SIZE - 1) / WORKGROUP_SIZE, 1, 1);
+      glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+
+      state.isResetting2 = false;
     }
 
     if (!state.isPseudoPaused) {
