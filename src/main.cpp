@@ -24,7 +24,7 @@ int height = 1080;
 const float near = 0.01f;
 const float far = 100.0f;
 const bool throttle = true;
-const bool fullscreen = true;
+const bool fullscreen = false;
 
 const float speed = 5.0f;
 const float sensitivity = 0.05f;
@@ -152,7 +152,8 @@ void processKey(GLFWwindow* window, int key, int scancode, int action, int mods)
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
-    std::cout << "Usage: ./vbd-elasto-sim <01|02>" << std::endl;
+    std::cout << "Usage: ./vbd-elasto-sim (01|02)" << std::endl;
+    return 1;
   }
 
   glfwSetErrorCallback([](int error, const char* description) {
@@ -344,7 +345,7 @@ int main(int argc, char* argv[]) {
 
     if (!state.isPseudoPaused) {
       // === VBD (not synced with real-time) ===
-      float h = deltaTime;
+      float h = deltaTime * 0.8;
 
       // positions: t-1, t -> t, t+1
       glBindBuffer(GL_COPY_READ_BUFFER, vbd.__SSBO_POSITIONS_tp1_FRONT);
@@ -372,7 +373,7 @@ int main(int argc, char* argv[]) {
       // y
       // DCD with x^t
       // adaptive init for x
-      int iters = 12;
+      int iters = 10;
       for (int iter = 0; iter < iters; iter++) {
         // CCD every n_col iters
         for (unsigned int colorGroup = 0; colorGroup < vbd.colorGroupCount; colorGroup++) {
